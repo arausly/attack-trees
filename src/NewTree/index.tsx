@@ -17,11 +17,11 @@ import ReactFlow, {
   Node,
 } from "react-flow-renderer";
 import { ElementsData } from "./typings";
-import customNode from "./components/CustomNode";
+import customNode, { CustomNodeProps } from "./components/CustomNode";
 import Modal from "../components/modal";
 import utils from "../utils";
 import { useHistory, useParams } from "react-router";
-import { NodeType } from "../typings";
+import { FileType, NodeType } from "../typings";
 
 const nodeTypes = {
   customNode,
@@ -44,6 +44,29 @@ const NewTree: React.FC<{}> = () => {
   const [filename, setFilename] = React.useState<string>("");
   const [fileUploadLoading, setFileUploadLoading] =
     React.useState<boolean>(false);
+  const [activeNode, setActiveNode] = React.useState<{
+    nodeId?: string;
+    nodeTitle?: string;
+  }>({});
+  const [files, setFiles] = React.useState<FileType[]>([]);
+
+  React.useEffect(() => {
+    utils.getFiles(id).then((res: any) => {
+      const data: any[] = res?.data;
+      if (data?.length) {
+        setFiles(() =>
+          data.map(([name, nodeId, treeId, nodeTitle, url, format]) => ({
+            name,
+            nodeId,
+            treeId,
+            nodeTitle,
+            url,
+            format,
+          }))
+        );
+      }
+    });
+  }, [id]);
 
   // initial loading
   React.useEffect(() => {
@@ -163,7 +186,10 @@ const NewTree: React.FC<{}> = () => {
     setUnsavedChanges(false);
   };
 
-  const MenuButtons: React.FC<{ close: () => void }> = ({ close }) => (
+  const MenuButtons: React.FC<{ close: () => void; node: CustomNodeProps }> = ({
+    close,
+    node,
+  }) => (
     <div
       className="origin-top-right z-10 absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
       role="menu"
@@ -180,12 +206,8 @@ const NewTree: React.FC<{}> = () => {
           id="menu-item-3"
           onClick={() => {
             close();
-            const update = new Map();
-            toggleEditNameModal(
-              update.set(true, {
-                id,
-              })
-            );
+            const update = new Map([[true, { id: node.id }]]);
+            toggleEditNameModal(update);
           }}
         >
           <svg
@@ -212,7 +234,7 @@ const NewTree: React.FC<{}> = () => {
           id="menu-item-3"
           onClick={() => {
             close();
-            toggleHighlighting(id);
+            toggleHighlighting(node.id);
           }}
         >
           <svg
@@ -239,7 +261,7 @@ const NewTree: React.FC<{}> = () => {
           id="menu-item-3"
           onClick={() => {
             close();
-            handleDeleteNode(id);
+            handleDeleteNode(node.id);
           }}
         >
           <svg
@@ -267,6 +289,7 @@ const NewTree: React.FC<{}> = () => {
           onClick={() => {
             close();
             toggleFileUploader(true);
+            setActiveNode({ nodeId: node.id, nodeTitle: node.data.title });
           }}
         >
           <svg
@@ -293,7 +316,7 @@ const NewTree: React.FC<{}> = () => {
           id="menu-item-3"
           onClick={() => {
             close();
-            switchNodeType(id);
+            switchNodeType(node.id);
           }}
         >
           <svg
@@ -343,26 +366,18 @@ const NewTree: React.FC<{}> = () => {
     setUnsavedChanges(true);
   };
 
-  const uploadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const uploadFile = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    nodeId?: string,
+    nodeTitle?: string
+  ) => {
     const files = e.target.files;
-    const data = new FormData();
-    if (filename.length && files?.length) {
-      data.append("file", files[0]);
-      data.append("public_id", `${id}/${filename}`);
-      data.append("upload_preset", "attacktree");
+    if (filename.length && files?.length && nodeId && nodeTitle) {
       setFileUploadLoading(true);
-      try {
-        await fetch("https://api.cloudinary.com/v1_1/drausman/image/upload", {
-          method: "POST",
-          body: data,
-        });
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setFilename("");
-        setFileUploadLoading(false);
-        toggleFileUploader(false);
-      }
+      await utils.uploadFile(id, nodeTitle, nodeId, filename, files);
+      setFilename("");
+      setFileUploadLoading(false);
+      toggleFileUploader(false);
     }
   };
 
@@ -462,7 +477,9 @@ const NewTree: React.FC<{}> = () => {
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               id="username"
               type="file"
-              onChange={uploadFile}
+              onChange={(e) =>
+                uploadFile(e, activeNode.nodeId, activeNode.nodeTitle)
+              }
             />
           </div>
         </form>
@@ -621,7 +638,7 @@ const NewTree: React.FC<{}> = () => {
           </div>
         </div>
         <div className="tree__files flex-initial border p-6">
-          <h3>All files (10) </h3>
+          <h3>All files ({files.length}) </h3>
           <div className="mt-5 shadow flex">
             <input
               className="w-full rounded p-2"
@@ -648,56 +665,43 @@ const NewTree: React.FC<{}> = () => {
 
           <div className="w-full bg-white rounded-lg mt-8">
             <ul className="divide-y-2 divide-gray-400">
-              <li className="flex justify-between items-center p-3 hover:bg-gray-100 cursor-pointer">
-                Passwords.pdf
-                <button
-                  type="button"
-                  className="inline-flex justify-center  rounded-md border border-gray-300 shadow-sm px-2 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500"
-                  id="menu-button"
-                  aria-expanded="true"
-                  aria-haspopup="true"
+              {files.map((file, index) => (
+                <li
+                  key={index}
+                  className="flex justify-between items-center p-3 hover:bg-gray-100 cursor-pointer"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+                  {file.name}.{file.format}
+                  <a
+                    href={file.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    download={file.name}
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                    />
-                  </svg>
-                </button>
-              </li>
-              <li className="flex justify-between p-3 hover:bg-gray-100  cursor-pointer">
-                data.sql
-                <button
-                  type="button"
-                  className="inline-flex justify-center  rounded-md border border-gray-300 shadow-sm px-2 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500"
-                  id="menu-button"
-                  aria-expanded="true"
-                  aria-haspopup="true"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                    />
-                  </svg>
-                </button>
-              </li>
+                    <button
+                      type="button"
+                      className="inline-flex justify-center  rounded-md border border-gray-300 shadow-sm px-2 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500"
+                      id="menu-button"
+                      aria-expanded="true"
+                      aria-haspopup="true"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-6 w-6"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                        />
+                      </svg>
+                    </button>
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
         </div>

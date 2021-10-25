@@ -9,10 +9,10 @@ interface NodeContentProps {
   title: string;
   highlighted: boolean;
   nodeType: NodeType;
-  MenuButtons: React.FC<{ close: () => void }>;
+  MenuButtons: React.FC<{ close: () => void; node: CustomNodeProps }>;
 }
 
-interface CustomNodeProps extends NodeProps {
+export interface CustomNodeProps extends NodeProps {
   data: NodeContentProps;
 }
 
@@ -89,7 +89,9 @@ const CustomNode = React.memo((node: CustomNodeProps) => {
                 />
               </svg>
             </button>
-            {showMenu ? <MenuButtons close={() => toggleMenu(false)} /> : null}
+            {showMenu ? (
+              <MenuButtons close={() => toggleMenu(false)} node={node} />
+            ) : null}
           </div>
         </div>
       </div>

@@ -18,3 +18,13 @@ export enum NodeType {
   AND_NODE = "AND",
   OR_NODE = "OR",
 }
+
+//File
+export interface FileType {
+  name: string;
+  treeId: string;
+  nodeId: string;
+  nodeTitle: string;
+  url: string;
+  format: string;
+}

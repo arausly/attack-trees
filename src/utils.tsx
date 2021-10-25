@@ -2,7 +2,8 @@ import { Elements, FlowElement, isNode } from "react-flow-renderer";
 import db from "./NewTree/db";
 import { ElementsData } from "./NewTree/typings";
 
-const COLLECTION_NAME = "AttackTree";
+const ATTACK_COLLECTION = "AttackTree";
+const FILE_COLLECTION = "NodeFiles";
 
 let lastDigit = 0;
 const newId = (elements: Elements) => {
@@ -39,7 +40,7 @@ const save = async (elements: Elements, refId: string) => {
   });
 
   return await db.client.query(
-    db.q.Update(db.q.Ref(db.q.Collection(COLLECTION_NAME), refId), {
+    db.q.Update(db.q.Ref(db.q.Collection(ATTACK_COLLECTION), refId), {
       data,
     })
   );
@@ -48,7 +49,7 @@ const save = async (elements: Elements, refId: string) => {
 // get a single tree
 const getTreeData = async (refId: string) => {
   return await db.client.query(
-    db.q.Get(db.q.Ref(db.q.Collection(COLLECTION_NAME), refId))
+    db.q.Get(db.q.Ref(db.q.Collection(ATTACK_COLLECTION), refId))
   );
 };
 
@@ -56,9 +57,16 @@ const getTreeData = async (refId: string) => {
 const getAllTrees = async () => {
   return await db.client.query(
     db.q.Map(
-      db.q.Paginate(db.q.Documents(db.q.Collection(COLLECTION_NAME))),
+      db.q.Paginate(db.q.Documents(db.q.Collection(ATTACK_COLLECTION))),
       db.q.Lambda((Tree) => db.q.Get(Tree))
     )
+  );
+};
+
+//list files
+const getFiles = async (treeId: string) => {
+  return await db.client.query(
+    db.q.Paginate(db.q.Match(db.q.Index("treeId"), treeId))
   );
 };
 
@@ -71,10 +79,46 @@ const createNewTree = async (title: string, description: string) => {
     edges: [],
   };
   return await db.client.query(
-    db.q.Create(db.q.Collection(COLLECTION_NAME), {
+    db.q.Create(db.q.Collection(ATTACK_COLLECTION), {
       data,
     })
   );
+};
+
+const uploadFile = async (
+  treeId: string,
+  nodeTitle: string,
+  nodeId: string,
+  filename: string,
+  files: FileList
+) => {
+  const data = new FormData();
+  data.append("file", files[0]);
+  data.append("public_id", `${treeId}/${filename}`);
+  data.append("upload_preset", "attacktree");
+  try {
+    //upload to cloudinary
+    const response = await (
+      await fetch("https://api.cloudinary.com/v1_1/drausman/image/upload", {
+        method: "POST",
+        body: data,
+      })
+    ).json();
+
+    //upload to database
+    await db.client.query(
+      db.q.Create(db.q.Collection(FILE_COLLECTION), {
+        data: {
+          name: filename,
+          treeId,
+          nodeTitle,
+          nodeId,
+          url: response.url,
+          format: response.format,
+        },
+      })
+    );
+  } catch (err) {}
 };
 
 const utils = {
@@ -84,6 +128,8 @@ const utils = {
   getAllTrees,
   createNewTree,
   shortenWithEllipsis,
+  uploadFile,
+  getFiles,
 };
 
 export default utils;
