@@ -42,8 +42,7 @@ const NewTree: React.FC<{}> = () => {
   const { id } = useParams<{ id: string }>();
   const history = useHistory();
   const [filename, setFilename] = React.useState<string>("");
-  const [fileUploadLoading, setFileUploadLoading] =
-    React.useState<boolean>(false);
+  const [, setFileUploadLoading] = React.useState<boolean>(false);
   const [activeNode, setActiveNode] = React.useState<{
     nodeId?: string;
     nodeTitle?: string;
