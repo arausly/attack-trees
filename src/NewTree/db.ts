@@ -3,7 +3,7 @@ import faunadb from "faunadb";
 const q = faunadb.query;
 
 const client = new faunadb.Client({
-  secret: "fnAEWPH8sDAAQkFkUzmVdCHKdhPzm7zMkbZrIJnD",
+  secret: process.env.REACT_APP_FAUNADB_API_SECRET!,
   domain: "db.us.fauna.com",
   port: 443,
   scheme: "https",

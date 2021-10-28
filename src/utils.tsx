@@ -95,11 +95,11 @@ const uploadFile = async (
   const data = new FormData();
   data.append("file", files[0]);
   data.append("public_id", `${treeId}/${filename}`);
-  data.append("upload_preset", "attacktree");
+  data.append("upload_preset", process.env.REACT_APP_CLOUDINARY_PRESET!);
   try {
     //upload to cloudinary
     const response = await (
-      await fetch("https://api.cloudinary.com/v1_1/drausman/image/upload", {
+      await fetch(process.env.REACT_APP_CLOUDINARY_URL!, {
         method: "POST",
         body: data,
       })
