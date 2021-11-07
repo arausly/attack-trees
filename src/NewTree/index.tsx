@@ -22,21 +22,17 @@ import Modal from "../components/modal";
 import utils from "../utils";
 import { useHistory, useParams } from "react-router";
 import { FileType, NodeType } from "../typings";
+import SideBar from "./sidebar";
 
 const nodeTypes = {
   customNode,
 };
 
 const NewTree: React.FC<{}> = () => {
-  const [showCreateDropdown, toggleCreateDropdown] =
-    React.useState<boolean>(false);
+  const reactFlowWrapper = React.useRef<any>(null);
   const [elements, setElements] = React.useState<Elements>([]);
   const [hasUnsavedChanges, setUnsavedChanges] = React.useState<boolean>(false);
   const [editNameModal, toggleEditNameModal] = React.useState<any>(new Map());
-  const [lastPosition, setLastPosition] = React.useState<XYPosition>({
-    x: 50,
-    y: 50,
-  });
   const [showFileUploader, toggleFileUploader] = React.useState<boolean>(false);
   const updateNodeInternals = useUpdateNodeInternals();
   const { id } = useParams<{ id: string }>();
@@ -74,21 +70,49 @@ const NewTree: React.FC<{}> = () => {
       .then((res: any) => {
         const data: ElementsData = res?.data;
         if (data) {
-          const nodes = data.nodes.map((el: any) => ({
-            type: "customNode",
-            data: {
-              ...el.data,
-              MenuButtons,
-            },
-            id: el.id,
-            position: el.position,
-          }));
+          const nodes = data.nodes.map((el: any) =>
+            createNode(
+              el.data.nodeType,
+              el.position,
+              el.id,
+              el.data.highlighted,
+              el.data.title
+            )
+          );
           setElements(() => [...nodes, ...data.edges]);
         }
       })
       .catch(console.error);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const onDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+  };
+
+  const onDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const reactFlowBounds = reactFlowWrapper.current?.getBoundingClientRect();
+    const nodeType = event.dataTransfer.getData(
+      "application/reactflow"
+    ) as NodeType;
+
+    const newNode = createNode(
+      nodeType,
+      {
+        x: event.clientX - (reactFlowBounds.left + 50 / 2),
+        y: event.clientY - (reactFlowBounds.top + 45 / 2),
+      },
+      undefined,
+      false,
+      undefined
+    );
+
+    console.log({ newNode });
+    setElements((els) => [...els, newNode]);
+    setUnsavedChanges(true);
+  };
 
   const switchNodeType = (id: string) => {
     setElements((els) => {
@@ -225,33 +249,36 @@ const NewTree: React.FC<{}> = () => {
           </svg>
           <p>Rename</p>
         </button>
-        <button
-          type="submit"
-          className="text-gray-700 flex items-center block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-          role="menuitem"
-          tabIndex={-1}
-          id="menu-item-3"
-          onClick={() => {
-            close();
-            toggleHighlighting(node.id);
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6 mr-2"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+        {(node.data.nodeType !== NodeType.DEFEND_NODE && (
+          <button
+            type="submit"
+            className="text-gray-700 flex items-center block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+            role="menuitem"
+            tabIndex={-1}
+            id="menu-item-3"
+            onClick={() => {
+              close();
+              toggleHighlighting(node.id);
+            }}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-          <p>Highlight</p>
-        </button>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 mr-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            <p>Highlight</p>
+          </button>
+        )) ||
+          null}
         <button
           type="submit"
           className="text-gray-700 flex items-center block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
@@ -340,12 +367,11 @@ const NewTree: React.FC<{}> = () => {
 
   const createNode = (
     nodeType: NodeType,
+    pos: XYPosition,
     nodeId?: string,
     highlighted = false,
-    title = "default__name",
-    pos?: XYPosition
+    title = "default__name"
   ) => {
-    const newPosition = { x: lastPosition.x + 50, y: lastPosition.y + 50 };
     const id = nodeId || utils.newId(elements);
 
     const newNode = {
@@ -357,12 +383,9 @@ const NewTree: React.FC<{}> = () => {
         MenuButtons,
       },
       id,
-      position: pos || newPosition,
+      position: pos,
     };
-
-    setLastPosition({ ...newPosition });
-    setElements((els) => [...els, newNode]);
-    setUnsavedChanges(true);
+    return newNode;
   };
 
   const uploadFile = async (
@@ -504,6 +527,7 @@ const NewTree: React.FC<{}> = () => {
         Go Back Home
       </button>
       <div className="tree flex p-8">
+        <SideBar />
         <div className="tree__editor flex-1 border p-5">
           <div className="flex flex-col">
             <div className="tree__editor__toolbar flex-initial border p-2">
@@ -549,81 +573,20 @@ const NewTree: React.FC<{}> = () => {
                     </svg>
                   </button>
                 </div>
-                <div className="relative inline-block text-left">
-                  <button
-                    type="button"
-                    className="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500"
-                    id="menu-button"
-                    aria-expanded="true"
-                    aria-haspopup="true"
-                    onClick={() => toggleCreateDropdown((d) => !d)}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-8 w-8 cursor-pointer"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </button>
-
-                  {showCreateDropdown ? (
-                    <div
-                      className="origin-top-right z-10 absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
-                      role="menu"
-                      aria-orientation="vertical"
-                      aria-labelledby="menu-button"
-                      tabIndex={-1}
-                    >
-                      <div className="py-1" role="none">
-                        <button
-                          type="submit"
-                          className="text-gray-700 block w-full text-left px-4 py-2 text-sm"
-                          role="menuitem"
-                          tabIndex={-1}
-                          id="menu-item-3"
-                          onClick={() => {
-                            toggleCreateDropdown(false);
-                            createNode(NodeType.OR_NODE);
-                          }}
-                        >
-                          Add OR Node
-                        </button>
-                        <button
-                          type="submit"
-                          className="text-gray-700 block w-full text-left px-4 py-2 text-sm"
-                          role="menuitem"
-                          tabIndex={-1}
-                          id="menu-item-3"
-                          onClick={() => {
-                            toggleCreateDropdown(false);
-                            createNode(NodeType.AND_NODE);
-                          }}
-                        >
-                          Add AND Node
-                        </button>
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
               </div>
             </div>
             <div
               className="tree__editor__pane border m-2"
               style={{ height: "80vh" }}
+              ref={reactFlowWrapper}
             >
               <ReactFlow
                 elements={elements}
                 nodeTypes={nodeTypes}
                 onConnect={onConnect}
                 onNodeDragStop={handleNodeDragStop}
+                onDragOver={onDragOver}
+                onDrop={onDrop}
               >
                 <Background
                   variant={BackgroundVariant.Dots}
@@ -636,6 +599,7 @@ const NewTree: React.FC<{}> = () => {
             </div>
           </div>
         </div>
+
         <div className="tree__files flex-initial border p-6">
           <h3>All files ({files.length}) </h3>
           <div className="mt-5 shadow flex">

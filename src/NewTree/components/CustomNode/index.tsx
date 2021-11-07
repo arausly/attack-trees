@@ -27,10 +27,15 @@ const CustomNode = React.memo((node: CustomNodeProps) => {
     width: "10px",
     height: "10px",
     borderRadius: "0px",
-    backgroundColor: !highlighted ? "#000" : "rgb(139, 92, 246)",
+    backgroundColor:
+      nodeType === NodeType.DEFEND_NODE
+        ? "rgba(220, 38, 38)"
+        : !highlighted
+        ? "#000"
+        : "rgb(139, 92, 246)",
   };
 
-  const handles: any[] = [
+  let handles: any[] = [
     { type: "target", position: Position.Top, id: "a", style: handleStyle },
     {
       type: "source",
@@ -52,13 +57,21 @@ const CustomNode = React.memo((node: CustomNodeProps) => {
     });
   }
 
+  if (nodeType === NodeType.LEAF_NODE) {
+    handles = [
+      { type: "target", position: Position.Top, id: "a", style: handleStyle },
+    ];
+  }
+
   const activeNodeClass = selected ? "border-gray-500" : "";
+  const defendNodeClass =
+    nodeType === NodeType.DEFEND_NODE ? "border-8 border-red-600" : "";
 
   return (
     <div
-      className={`node flex w-72 bg-white flex-col ${activeNodeClass} ${
+      className={`node flex w-72 bg-white flex-col ${activeNodeClass}  ${
         highlighted ? "border-solid border-2 border-purple-500" : "border"
-      } `}
+      } ${defendNodeClass}`}
     >
       <div className="node__header flex-initial border">
         <div className="flex justify-between items-center p-2">

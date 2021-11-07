@@ -17,6 +17,8 @@ export interface Tree {
 export enum NodeType {
   AND_NODE = "AND",
   OR_NODE = "OR",
+  LEAF_NODE = "LEAF",
+  DEFEND_NODE = "DEFEND",
 }
 
 //File
