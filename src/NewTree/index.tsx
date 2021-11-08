@@ -5,7 +5,6 @@ import ReactFlow, {
   BackgroundVariant,
   MiniMap,
   Controls,
-  XYPosition,
   removeElements,
   isNode,
   addEdge,
@@ -15,8 +14,9 @@ import ReactFlow, {
   useUpdateNodeInternals,
   ReactFlowProvider,
   Node,
+  OnLoadParams,
 } from "react-flow-renderer";
-import { ElementsData } from "./typings";
+import { CreateNodeType, ElementsData } from "./typings";
 import customNode, { CustomNodeProps } from "./components/CustomNode";
 import Modal from "../components/modal";
 import utils from "../utils";
@@ -71,14 +71,14 @@ const NewTree: React.FC<{}> = () => {
         const data: ElementsData = res?.data;
         if (data) {
           const nodes = data.nodes.map((el: any) =>
-            createNode(
-              el.data.nodeType,
-              el.position,
-              el.id,
-              el.data.highlighted,
-              el.data.title,
-              el.data.description
-            )
+            createNode({
+              type: el.data.nodeType,
+              pos: el.position,
+              nodeId: el.id,
+              highlighted: el.data.highlighted,
+              title: el.data.title,
+              description: el.data.description,
+            })
           );
           setElements(() => [...nodes, ...data.edges]);
         }
@@ -92,6 +92,9 @@ const NewTree: React.FC<{}> = () => {
     event.dataTransfer.dropEffect = "move";
   };
 
+  const onLoad = (reactFlowInstance: OnLoadParams) =>
+    reactFlowInstance.fitView();
+
   const onDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     const reactFlowBounds = reactFlowWrapper.current?.getBoundingClientRect();
@@ -99,15 +102,13 @@ const NewTree: React.FC<{}> = () => {
       "application/reactflow"
     ) as NodeType;
 
-    const newNode = createNode(
-      nodeType,
-      {
+    const newNode = createNode({
+      type: nodeType,
+      pos: {
         x: event.clientX - (reactFlowBounds.left + 50 / 2),
         y: event.clientY - (reactFlowBounds.top + 45 / 2),
       },
-      undefined,
-      false
-    );
+    });
 
     setElements((els) => [...els, newNode]);
     setUnsavedChanges(true);
@@ -374,21 +375,27 @@ const NewTree: React.FC<{}> = () => {
     </div>
   );
 
-  const createNode = (
-    nodeType: NodeType,
-    pos: XYPosition,
-    nodeId?: string,
-    highlighted = false,
-    title = "default__title",
-    description = "default_description"
-  ) => {
+  /**
+   *
+   *
+   */
+  const createNode = (nodeProps: CreateNodeType) => {
+    const {
+      type,
+      pos,
+      nodeId,
+      highlighted = false,
+      title = "default__title",
+      description = "default_description",
+    } = nodeProps;
+
     const id = nodeId || utils.newId(elements);
 
     const newNode = {
       type: "customNode",
       data: {
         highlighted,
-        nodeType,
+        nodeType: type,
         title,
         description,
         MenuButtons,
@@ -632,6 +639,7 @@ const NewTree: React.FC<{}> = () => {
                 onNodeDragStop={handleNodeDragStop}
                 onDragOver={onDragOver}
                 onDrop={onDrop}
+                onLoad={onLoad}
               >
                 <Background
                   variant={BackgroundVariant.Dots}
