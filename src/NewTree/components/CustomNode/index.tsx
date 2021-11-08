@@ -11,6 +11,7 @@ interface NodeContentProps {
   highlighted: boolean;
   nodeType: NodeType;
   MenuButtons: React.FC<{ close: () => void; node: CustomNodeProps }>;
+  fileCount?: number;
 }
 
 export interface CustomNodeProps extends NodeProps {
@@ -20,7 +21,7 @@ export interface CustomNodeProps extends NodeProps {
 const CustomNode = React.memo((node: CustomNodeProps) => {
   const {
     selected,
-    data: { highlighted, MenuButtons, nodeType, title, description },
+    data: { highlighted, MenuButtons, nodeType, title, description, fileCount },
   } = node;
   const [showMenu, toggleMenu] = React.useState<boolean>(false);
 
@@ -109,8 +110,33 @@ const CustomNode = React.memo((node: CustomNodeProps) => {
           </div>
         </div>
       </div>
-      <div className="node__body flex-1 p-4">
-        <p>{description}</p>
+      <div className="node__body flex flex-1 p-4 justify-around">
+        <div className="flex">
+          <p>{description}</p>
+        </div>
+        {fileCount ? (
+          <div className="flex-initial">
+            <span className="relative inline-block">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-8 w-8"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"
+                />
+              </svg>
+              <span className="absolute -top-0.5 -right-2.5 px-2 py-1 text-xs font-bold leading-none text-red-100 transform bg-red-600 rounded-full">
+                {fileCount}
+              </span>
+            </span>
+          </div>
+        ) : null}
       </div>
       {nodeType === NodeType.AND_NODE && (
         <div

@@ -44,6 +44,7 @@ const NewTree: React.FC<{}> = () => {
     nodeTitle?: string;
   }>({});
   const [files, setFiles] = React.useState<FileType[]>([]);
+  const [refreshFileListCount, setRefreshList] = React.useState<number>(0);
 
   React.useEffect(() => {
     utils.getFiles(id).then((res: any) => {
@@ -61,7 +62,7 @@ const NewTree: React.FC<{}> = () => {
         );
       }
     });
-  }, [id]);
+  }, [id, refreshFileListCount]);
 
   // initial loading
   React.useEffect(() => {
@@ -78,6 +79,8 @@ const NewTree: React.FC<{}> = () => {
               highlighted: el.data.highlighted,
               title: el.data.title,
               description: el.data.description,
+              fileCount:
+                files.filter((file) => file.nodeId === el.id)?.length ?? 0,
             })
           );
           setElements(() => [...nodes, ...data.edges]);
@@ -85,7 +88,7 @@ const NewTree: React.FC<{}> = () => {
       })
       .catch(console.error);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [files.map((f) => f.nodeId).join("|")]);
 
   const onDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -375,10 +378,6 @@ const NewTree: React.FC<{}> = () => {
     </div>
   );
 
-  /**
-   *
-   *
-   */
   const createNode = (nodeProps: CreateNodeType) => {
     const {
       type,
@@ -387,6 +386,7 @@ const NewTree: React.FC<{}> = () => {
       highlighted = false,
       title = "default__title",
       description = "default_description",
+      fileCount,
     } = nodeProps;
 
     const id = nodeId || utils.newId(elements);
@@ -399,6 +399,7 @@ const NewTree: React.FC<{}> = () => {
         title,
         description,
         MenuButtons,
+        fileCount,
       },
       id,
       position: pos,
@@ -418,6 +419,7 @@ const NewTree: React.FC<{}> = () => {
       setFilename("");
       setFileUploadLoading(false);
       toggleFileUploader(false);
+      setRefreshList((f) => f++);
     }
   };
 
