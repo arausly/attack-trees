@@ -109,7 +109,6 @@ const NewTree: React.FC<{}> = () => {
       undefined
     );
 
-    console.log({ newNode });
     setElements((els) => [...els, newNode]);
     setUnsavedChanges(true);
   };
@@ -184,7 +183,17 @@ const NewTree: React.FC<{}> = () => {
   const handleFileUpload = () => {};
 
   const onConnect = React.useCallback((params: Edge<any> | Connection) => {
-    setElements((els) => addEdge(params, els));
+    setElements((els) => {
+      const newEdge = { ...params, animated: false };
+      const hasConnectionWithDefendNode = utils.connectionWithDefendNode(
+        els,
+        params
+      );
+      if (hasConnectionWithDefendNode) {
+        newEdge.animated = true;
+      }
+      return addEdge(newEdge, els);
+    });
     setUnsavedChanges(true);
   }, []);
 
@@ -204,8 +213,7 @@ const NewTree: React.FC<{}> = () => {
   );
 
   const handleSave = async () => {
-    const data = await utils.save(elements, id);
-    console.log({ data });
+    await utils.save(elements, id);
     setUnsavedChanges(false);
   };
 

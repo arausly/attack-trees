@@ -1,6 +1,13 @@
-import { Elements, FlowElement, isNode } from "react-flow-renderer";
+import {
+  Connection,
+  Edge,
+  Elements,
+  FlowElement,
+  isNode,
+} from "react-flow-renderer";
 import db from "./NewTree/db";
 import { ElementsData } from "./NewTree/typings";
+import { NodeType } from "./typings";
 
 const ATTACK_COLLECTION = "AttackTree";
 const FILE_COLLECTION = "NodeFiles";
@@ -121,6 +128,18 @@ const uploadFile = async (
   } catch (err) {}
 };
 
+//check if new connection is with a defend node
+const connectionWithDefendNode = (
+  elements: FlowElement<any>[],
+  params: Edge<any> | Connection
+) =>
+  elements.find(
+    (el) =>
+      isNode(el) &&
+      (el.id === params.source || el.id === params.target) &&
+      el.data.nodeType === NodeType.DEFEND_NODE
+  );
+
 const utils = {
   newId,
   save,
@@ -130,6 +149,7 @@ const utils = {
   shortenWithEllipsis,
   uploadFile,
   getFiles,
+  connectionWithDefendNode,
 };
 
 export default utils;
