@@ -12,6 +12,7 @@ interface NodeContentProps {
   nodeType: NodeType;
   MenuButtons: React.FC<{ close: () => void; node: CustomNodeProps }>;
   fileCount?: number;
+  nodeWeight?: number;
 }
 
 export interface CustomNodeProps extends NodeProps {
@@ -21,7 +22,15 @@ export interface CustomNodeProps extends NodeProps {
 const CustomNode = React.memo((node: CustomNodeProps) => {
   const {
     selected,
-    data: { highlighted, MenuButtons, nodeType, title, description, fileCount },
+    data: {
+      highlighted,
+      MenuButtons,
+      nodeType,
+      title,
+      description,
+      fileCount,
+      nodeWeight,
+    },
   } = node;
   const [showMenu, toggleMenu] = React.useState<boolean>(false);
 
@@ -111,6 +120,11 @@ const CustomNode = React.memo((node: CustomNodeProps) => {
         </div>
       </div>
       <div className="node__body flex flex-1 p-4 justify-around">
+        {nodeWeight ? (
+          <span className="flex mr-2 h-10 w-10 items-center justify-center px-2 py-0.5 text-lg font-bold leading-none text-red-100 transform bg-yellow-900 rounded-full">
+            {nodeWeight}
+          </span>
+        ) : null}
         <div className="flex">
           <p>{description}</p>
         </div>
@@ -125,9 +139,7 @@ const CustomNode = React.memo((node: CustomNodeProps) => {
                 stroke="currentColor"
               >
                 <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
+                  strokeWidth="2"
                   d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"
                 />
               </svg>

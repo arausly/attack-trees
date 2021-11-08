@@ -45,6 +45,9 @@ const NewTree: React.FC<{}> = () => {
   }>({});
   const [files, setFiles] = React.useState<FileType[]>([]);
   const [refreshFileListCount, setRefreshList] = React.useState<number>(0);
+  const [nodeWeight, setNodeWeight] = React.useState<number>(0);
+  const [menuSelectedNode, setMenuSelectedNode] = React.useState<string>("");
+  const [showWeightForm, toggleWeightForm] = React.useState<boolean>(false);
 
   React.useEffect(() => {
     utils.getFiles(id).then((res: any) => {
@@ -79,6 +82,7 @@ const NewTree: React.FC<{}> = () => {
               highlighted: el.data.highlighted,
               title: el.data.title,
               description: el.data.description,
+              nodeWeight: el.data.nodeWeight,
               fileCount:
                 files.filter((file) => file.nodeId === el.id)?.length ?? 0,
             })
@@ -262,36 +266,7 @@ const NewTree: React.FC<{}> = () => {
           </svg>
           <p>Edit</p>
         </button>
-        {(node.data.nodeType !== NodeType.DEFEND_NODE && (
-          <button
-            type="submit"
-            className="text-gray-700 flex items-center block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-            role="menuitem"
-            tabIndex={-1}
-            id="menu-item-3"
-            onClick={() => {
-              close();
-              toggleHighlighting(node.id);
-            }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 mr-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-            <p>Highlight</p>
-          </button>
-        )) ||
-          null}
+
         <button
           type="submit"
           className="text-gray-700 flex items-center block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
@@ -319,61 +294,125 @@ const NewTree: React.FC<{}> = () => {
           </svg>
           Remove
         </button>
-        <button
-          type="submit"
-          className="text-gray-700 flex items-center block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-          role="menuitem"
-          tabIndex={-1}
-          id="menu-item-3"
-          onClick={() => {
-            close();
-            toggleFileUploader(true);
-            setActiveNode({ nodeId: node.id, nodeTitle: node.data.title });
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6 mr-2"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-            />
-          </svg>
-          Add file
-        </button>
-        <button
-          type="submit"
-          className="text-gray-700 flex items-center block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-          role="menuitem"
-          tabIndex={-1}
-          id="menu-item-3"
-          onClick={() => {
-            close();
-            switchNodeType(node.id);
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6 mr-2"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-            />
-          </svg>
-          Change Type
-        </button>
+
+        {![NodeType.DEFEND_NODE, NodeType.LEAF_NODE].includes(
+          node.data.nodeType
+        ) ? (
+          <>
+            <button
+              type="submit"
+              className="text-gray-700 flex items-center block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+              role="menuitem"
+              tabIndex={-1}
+              id="menu-item-3"
+              onClick={() => {
+                close();
+                setMenuSelectedNode(node.id);
+                toggleWeightForm(true);
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 mr-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <p>Add weight</p>
+            </button>
+
+            <button
+              type="submit"
+              className="text-gray-700 flex items-center block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+              role="menuitem"
+              tabIndex={-1}
+              id="menu-item-3"
+              onClick={() => {
+                close();
+                toggleHighlighting(node.id);
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 mr-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+              <p>Highlight</p>
+            </button>
+
+            <button
+              type="submit"
+              className="text-gray-700 flex items-center block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+              role="menuitem"
+              tabIndex={-1}
+              id="menu-item-3"
+              onClick={() => {
+                close();
+                toggleFileUploader(true);
+                setActiveNode({ nodeId: node.id, nodeTitle: node.data.title });
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 mr-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                />
+              </svg>
+              Add file
+            </button>
+            <button
+              type="submit"
+              className="text-gray-700 flex items-center block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+              role="menuitem"
+              tabIndex={-1}
+              id="menu-item-3"
+              onClick={() => {
+                close();
+                switchNodeType(node.id);
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 mr-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                />
+              </svg>
+              Change Type
+            </button>
+          </>
+        ) : null}
       </div>
     </div>
   );
@@ -387,6 +426,7 @@ const NewTree: React.FC<{}> = () => {
       title = "default__title",
       description = "default_description",
       fileCount,
+      nodeWeight = 0,
     } = nodeProps;
 
     const id = nodeId || utils.newId(elements);
@@ -400,6 +440,7 @@ const NewTree: React.FC<{}> = () => {
         description,
         MenuButtons,
         fileCount,
+        nodeWeight,
       },
       id,
       position: pos,
@@ -423,8 +464,57 @@ const NewTree: React.FC<{}> = () => {
     }
   };
 
+  const handleUpdateNodeWeight = () => {
+    setElements((els) =>
+      els.map((el) => {
+        if (el.id === menuSelectedNode) {
+          el.data = {
+            ...el.data,
+            nodeWeight,
+          };
+        }
+        return el;
+      })
+    );
+    toggleWeightForm(false);
+    setUnsavedChanges(true);
+  };
+
   return (
     <>
+      <Modal
+        show={showWeightForm}
+        title="Add file"
+        onClose={() => toggleWeightForm(false)}
+        onSave={() => handleUpdateNodeWeight()}
+        icon={
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+          />
+        }
+      >
+        <form className="bg-white rounded  pt-6 pb-8 mb-4">
+          <div className="mb-4">
+            <label
+              className="block text-gray-700 text-sm font-bold mb-2"
+              htmlFor="weight"
+            >
+              Edit node weight
+            </label>
+            <input
+              placeholder="Enter weight"
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              id="weight"
+              type="number"
+              value={nodeWeight}
+              onChange={(e) => setNodeWeight(parseInt(e.target.value))}
+            />
+          </div>
+        </form>
+      </Modal>
       <Modal
         show={!!editNameModal?.size}
         title="Edit label"
@@ -509,7 +599,6 @@ const NewTree: React.FC<{}> = () => {
           </p>
         </div>
       </Modal>
-
       <Modal
         show={showFileUploader}
         title="Add file"

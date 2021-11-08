@@ -14,4 +14,5 @@ export interface CreateNodeType {
   title?: string;
   description?: string;
   fileCount?: number;
+  nodeWeight?: number;
 }

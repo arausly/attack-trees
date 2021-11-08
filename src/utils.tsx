@@ -3,10 +3,12 @@ import {
   Edge,
   Elements,
   FlowElement,
+  isEdge,
   isNode,
 } from "react-flow-renderer";
-import db from "./NewTree/db";
-import { ElementsData } from "./NewTree/typings";
+import db from "./NewAttackTree/db";
+import Tree, { TreeNode } from "./NewAttackTree/Tree";
+import { ElementsData } from "./NewAttackTree/typings";
 import { NodeType } from "./typings";
 
 const ATTACK_COLLECTION = "AttackTree";
@@ -38,6 +40,7 @@ const save = async (elements: Elements, refId: string) => {
           title: el.data.title,
           description: el.data.description,
           nodeType: el.data.nodeType,
+          nodeWeight: el.data.nodeWeight,
         },
       };
       data.nodes.push(elCopy as FlowElement<any>);
@@ -129,6 +132,57 @@ const uploadFile = async (
   } catch (err) {}
 };
 
+/**
+ *
+ * in building tree ensure all nodes are connected, no loose nodes
+ */
+const getCheapestPath = (elements: FlowElement<Node | Edge>[]) => {
+  const nodesAndEdges: { [key: string]: FlowElement<any> } = {};
+  const tree = new Tree();
+
+  elements.forEach((el) => {
+    if (nodesAndEdges[el.id]) {
+      nodesAndEdges[el.id] = el;
+    }
+  });
+
+  elements.forEach((el) => {
+    if (isEdge(el)) {
+      // get source/parent node
+      const parentEl = nodesAndEdges[el.source];
+      const targetEl = nodesAndEdges[el.target];
+      //check if exists else create node.
+      if (!tree.root) {
+        //safe bet that the first edge here is from the root node
+        tree.root = new TreeNode(parentEl);
+        tree.root.children.push(new TreeNode(targetEl));
+      }
+      //traverse tree
+      tree.traverse((node) => {
+        if (node.data.id === parentEl.id) {
+          // add target node to children of parent
+          node.addNewNode(targetEl);
+        }
+      });
+
+      delete nodesAndEdges[el.source];
+      delete nodesAndEdges[el.target];
+    }
+  });
+
+  //tree has been built
+  const hasUnattachedNodes = Object.values(nodesAndEdges).find((n) =>
+    isNode(n)
+  );
+  // if nodes still exist in nodes and edges i.e there loose nodes still available and hence cannot make cannot get cheapest path
+  if (hasUnattachedNodes) {
+    console.error("Has loosely connected nodes, couldn't build tree");
+    return;
+  }
+
+  return tree.getCheapestPath();
+};
+
 //check if new connection is with a defend node
 const connectionWithDefendNode = (
   elements: FlowElement<any>[],
@@ -151,6 +205,7 @@ const utils = {
   uploadFile,
   getFiles,
   connectionWithDefendNode,
+  getCheapestPath,
 };
 
 export default utils;

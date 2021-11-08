@@ -1,5 +1,5 @@
 import { Switch, Route } from "react-router-dom";
-import NewTree from "../NewTree";
+import NewTree from "../NewAttackTree";
 import Timeline from "../Timeline";
 
 const Routes = () => {
