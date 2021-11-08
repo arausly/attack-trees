@@ -36,6 +36,7 @@ const save = async (elements: Elements, refId: string) => {
         data: {
           highlighted: el.data.highlighted,
           title: el.data.title,
+          description: el.data.description,
           nodeType: el.data.nodeType,
         },
       };

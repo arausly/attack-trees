@@ -7,6 +7,7 @@ import "./index.css";
 
 interface NodeContentProps {
   title: string;
+  description: string;
   highlighted: boolean;
   nodeType: NodeType;
   MenuButtons: React.FC<{ close: () => void; node: CustomNodeProps }>;
@@ -19,7 +20,7 @@ export interface CustomNodeProps extends NodeProps {
 const CustomNode = React.memo((node: CustomNodeProps) => {
   const {
     selected,
-    data: { highlighted, MenuButtons, nodeType, title },
+    data: { highlighted, MenuButtons, nodeType, title, description },
   } = node;
   const [showMenu, toggleMenu] = React.useState<boolean>(false);
 
@@ -75,7 +76,7 @@ const CustomNode = React.memo((node: CustomNodeProps) => {
     >
       <div className="node__header flex-initial border">
         <div className="flex justify-between items-center p-2">
-          <h5>{nodeType}</h5>
+          <h5>{title}</h5>
           <div className="relative inline-block text-left">
             <button
               type="button"
@@ -109,7 +110,7 @@ const CustomNode = React.memo((node: CustomNodeProps) => {
         </div>
       </div>
       <div className="node__body flex-1 p-4">
-        <p>{title}</p>
+        <p>{description}</p>
       </div>
       {nodeType === NodeType.AND_NODE && (
         <div

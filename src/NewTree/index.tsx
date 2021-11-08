@@ -76,7 +76,8 @@ const NewTree: React.FC<{}> = () => {
               el.position,
               el.id,
               el.data.highlighted,
-              el.data.title
+              el.data.title,
+              el.data.description
             )
           );
           setElements(() => [...nodes, ...data.edges]);
@@ -105,8 +106,7 @@ const NewTree: React.FC<{}> = () => {
         y: event.clientY - (reactFlowBounds.top + 45 / 2),
       },
       undefined,
-      false,
-      undefined
+      false
     );
 
     setElements((els) => [...els, newNode]);
@@ -158,11 +158,11 @@ const NewTree: React.FC<{}> = () => {
     setUnsavedChanges(true);
   }, []);
 
-  const handleNodeLabelChange = () => {
+  const handleNodeContentChange = () => {
     if (!editNameModal?.size) return;
     const modal = editNameModal?.get(true);
     if (modal) {
-      const { id, title } = modal;
+      const { id, title, description } = modal;
       if (!title?.length) return;
       setElements((els) =>
         els.map((el) => {
@@ -170,6 +170,7 @@ const NewTree: React.FC<{}> = () => {
             el.data = {
               ...el.data,
               title,
+              description,
             };
           }
           return el;
@@ -255,7 +256,7 @@ const NewTree: React.FC<{}> = () => {
               d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
             />
           </svg>
-          <p>Rename</p>
+          <p>Edit</p>
         </button>
         {(node.data.nodeType !== NodeType.DEFEND_NODE && (
           <button
@@ -378,7 +379,8 @@ const NewTree: React.FC<{}> = () => {
     pos: XYPosition,
     nodeId?: string,
     highlighted = false,
-    title = "default__name"
+    title = "default__title",
+    description = "default_description"
   ) => {
     const id = nodeId || utils.newId(elements);
 
@@ -388,6 +390,7 @@ const NewTree: React.FC<{}> = () => {
         highlighted,
         nodeType,
         title,
+        description,
         MenuButtons,
       },
       id,
@@ -417,7 +420,7 @@ const NewTree: React.FC<{}> = () => {
         show={!!editNameModal?.size}
         title="Edit label"
         onClose={() => toggleEditNameModal(undefined)}
-        onSave={() => handleNodeLabelChange()}
+        onSave={() => handleNodeContentChange()}
         icon={
           <path
             strokeLinecap="round"
@@ -428,18 +431,18 @@ const NewTree: React.FC<{}> = () => {
         }
       >
         <div className="mb-6">
-          <label
-            className="block text-gray-700 text-sm font-bold mb-2"
-            htmlFor="node_label"
-          >
-            Label
-          </label>
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              handleNodeLabelChange();
+              handleNodeContentChange();
             }}
           >
+            <label
+              className="block text-gray-700 text-sm font-bold mb-2"
+              htmlFor="node_label"
+            >
+              Title
+            </label>
             <input
               className="shadow appearance-none border border-red-500 rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
               id="node_label"
@@ -459,8 +462,42 @@ const NewTree: React.FC<{}> = () => {
               }}
               required
             />
+
+            <label
+              className="block text-gray-700 text-sm font-bold mb-2"
+              htmlFor="node_label"
+            >
+              Description
+            </label>
+            <input
+              className="shadow appearance-none border border-red-500 rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+              id="node_label"
+              placeholder="new label"
+              value={editNameModal?.get(true)?.description ?? ""}
+              onChange={(e) => {
+                toggleEditNameModal(
+                  (
+                    m: Map<
+                      boolean,
+                      { id: string; title?: string; description: string }
+                    >
+                  ) =>
+                    m.size &&
+                    new Map(
+                      m.set(true, {
+                        id: m.get(true)?.id ?? "",
+                        title: m.get(true)?.title ?? "",
+                        description: e.target.value,
+                      })
+                    )
+                );
+              }}
+              required
+            />
           </form>
-          <p className="text-red-500 text-xs italic">Please enter label</p>
+          <p className="text-red-500 text-xs italic">
+            Please enter title and description
+          </p>
         </div>
       </Modal>
 
