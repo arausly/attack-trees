@@ -141,7 +141,7 @@ const getCheapestPath = (elements: FlowElement<Node | Edge>[]) => {
   const tree = new Tree();
 
   elements.forEach((el) => {
-    if (nodesAndEdges[el.id]) {
+    if (!nodesAndEdges[el.id]) {
       nodesAndEdges[el.id] = el;
     }
   });
@@ -165,20 +165,22 @@ const getCheapestPath = (elements: FlowElement<Node | Edge>[]) => {
         }
       });
 
-      delete nodesAndEdges[el.source];
-      delete nodesAndEdges[el.target];
+      // delete nodesAndEdges[el.source];
+      // delete nodesAndEdges[el.target];
     }
   });
 
-  //tree has been built
-  const hasUnattachedNodes = Object.values(nodesAndEdges).find((n) =>
-    isNode(n)
-  );
-  // if nodes still exist in nodes and edges i.e there loose nodes still available and hence cannot make cannot get cheapest path
-  if (hasUnattachedNodes) {
-    console.error("Has loosely connected nodes, couldn't build tree");
-    return;
-  }
+  console.log({ tree });
+
+  // //tree has been built
+  // const hasUnattachedNodes = Object.values(nodesAndEdges).find((n) =>
+  //   isNode(n)
+  // );
+  // // if nodes still exist in nodes and edges i.e there loose nodes still available and hence cannot make cannot get cheapest path
+  // if (hasUnattachedNodes) {
+  //   console.error("Has loosely connected nodes, failed to build tree");
+  //   return;
+  // }
 
   return tree.getCheapestPath();
 };

@@ -693,6 +693,7 @@ const NewTree: React.FC<{}> = () => {
                     id="menu-button"
                     aria-expanded="true"
                     aria-haspopup="true"
+                    onClick={() => utils.getCheapestPath(elements)}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
