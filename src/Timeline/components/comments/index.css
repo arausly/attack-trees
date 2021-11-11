@@ -1,0 +1,39 @@
+.comment.show {
+  visibility: visible;
+  opacity: 1;
+  transition: 300ms;
+  z-index: 2;
+}
+
+.comment.hide {
+  visibility: hidden;
+  opacity: 0;
+  transition: 300ms;
+}
+
+.comment__area {
+  position: absolute;
+  z-index: 10;
+  right: 0;
+  top: 0;
+  background-color: #fff;
+  height: 100vh;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.comment-box {
+  overflow-y: scroll;
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+}
+
+.comment__area input {
+  width: 100%;
+  height: 50px;
+  padding: 10px;
+  border: 1px solid #f5f4f4;
+}

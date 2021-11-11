@@ -1,6 +1,7 @@
 import React from "react";
 import { useHistory } from "react-router";
 import Modal from "../components/modal";
+import Comment from "./components/comments";
 import { NodeType, Tree } from "../typings";
 import utils from "../utils";
 
@@ -8,6 +9,8 @@ const Timeline = () => {
   const [trees, setTrees] = React.useState<Tree[]>([]);
   const [title, setTitle] = React.useState<string>("");
   const [description, setDescription] = React.useState<string>("");
+  const [showComments, setShowComments] = React.useState<boolean>(false);
+  const [activeTreeId, setActiveTreeId] = React.useState<string>("");
   const [showCreateTreeForm, toggleCreateTreeForm] =
     React.useState<boolean>(false);
   const history = useHistory();
@@ -30,6 +33,11 @@ const Timeline = () => {
 
   return (
     <>
+      <Comment
+        toggle={setShowComments}
+        treeId={activeTreeId}
+        show={showComments}
+      />
       <Modal
         show={showCreateTreeForm}
         title="Create New Tree"
@@ -134,11 +142,7 @@ const Timeline = () => {
             const highlightsNodesLength = data.highlights.length;
             const treeId = tree.ref.value.id;
             return (
-              <div
-                key={treeId}
-                className="cursor-pointer"
-                onClick={() => history.push(`/tree/${treeId}`)}
-              >
+              <div key={treeId} className="cursor-pointer">
                 <div className="max-w-sm rounded overflow-hidden shadow-lg  flex flex-col justify-center items-center">
                   <img
                     className="w-full"
@@ -146,8 +150,64 @@ const Timeline = () => {
                     alt="Sunset in the mountains"
                   />
                   <div className="px-6 py-4">
-                    <div className="font-bold text-xl mb-2">
-                      {utils.shortenWithEllipsis(tree.data.title ?? "No Title")}
+                    <div className="flex flex-col items-center">
+                      <div className="ml-4 flex items-center justify-between mb-2">
+                        <div
+                          className="__cursor mx-2 flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10"
+                          onClick={() => {
+                            history.push(`/tree/${treeId}`);
+                          }}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-6 w-6 text-red-600 cursor-pointer"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            />
+                          </svg>
+                        </div>
+                        <span className="mx-3" />
+                        <div
+                          onClick={() => {
+                            setShowComments(true);
+                            setActiveTreeId(treeId);
+                          }}
+                          className="__cursor mx-2 flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10 ml-2"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-6 w-6 text-red-600"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                      <div className="font-bold text-xl mb-2">
+                        {utils.shortenWithEllipsis(
+                          tree.data.title ?? "No Title"
+                        )}
+                      </div>
                     </div>
                     <p className="text-gray-700 text-base">
                       {utils.shortenWithEllipsis(

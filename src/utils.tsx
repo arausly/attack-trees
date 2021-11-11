@@ -14,6 +14,7 @@ import { NodeType } from "./typings";
 
 const ATTACK_COLLECTION = "AttackTree";
 const FILE_COLLECTION = "NodeFiles";
+const COMMENT_COLLECTION = "Comment";
 
 let lastDigit = 0;
 const newId = (elements: Elements) => {
@@ -25,6 +26,23 @@ const newId = (elements: Elements) => {
 
 const shortenWithEllipsis = (content: string = "", size: number = 40): string =>
   content?.length < size ? content : `${content.substring(0, size)}...`;
+
+const saveComment = async (comment: string, treeId: string) => {
+  return await db.client.query(
+    db.q.Create(db.q.Collection(COMMENT_COLLECTION), {
+      data: {
+        comment,
+        treeId,
+      },
+    })
+  );
+};
+
+const getComments = async (treeId: string) => {
+  return await db.client.query(
+    db.q.Paginate(db.q.Match(db.q.Index("commentByTreeId"), treeId))
+  );
+};
 
 // update tree info
 const save = async (elements: Elements, refId: string) => {
@@ -219,6 +237,8 @@ const utils = {
   connectionWithDefendNode,
   getCheapestPath,
   sleep,
+  saveComment,
+  getComments,
 };
 
 export default utils;
