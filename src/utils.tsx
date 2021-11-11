@@ -5,6 +5,7 @@ import {
   FlowElement,
   isEdge,
   isNode,
+  Node,
 } from "react-flow-renderer";
 import db from "./NewAttackTree/db";
 import Tree, { TreeNode } from "./NewAttackTree/Tree";
@@ -134,6 +135,14 @@ const uploadFile = async (
 
 /**
  *
+ * @param time milliseconds
+ * @returns
+ */
+const sleep = (time: number) => {
+  return new Promise((resolve) => setTimeout(resolve, time));
+};
+/**
+ *
  * in building tree ensure all nodes are connected, no loose nodes
  */
 const getCheapestPath = (elements: FlowElement<Node | Edge>[]) => {
@@ -165,7 +174,6 @@ const getCheapestPath = (elements: FlowElement<Node | Edge>[]) => {
       } else {
         //traverse tree
         tree.traverse((node) => {
-          // console.log("NODE", node);
           if (node.data.id === parentEl.id) {
             // add target node to children of parent
             node.addNewNode(targetEl);
@@ -210,6 +218,7 @@ const utils = {
   getFiles,
   connectionWithDefendNode,
   getCheapestPath,
+  sleep,
 };
 
 export default utils;

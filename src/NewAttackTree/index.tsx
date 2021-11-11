@@ -15,6 +15,7 @@ import ReactFlow, {
   ReactFlowProvider,
   Node,
   OnLoadParams,
+  useZoomPanHelper,
 } from "react-flow-renderer";
 import { CreateNodeType, ElementsData } from "./typings";
 import customNode, { CustomNodeProps } from "./components/CustomNode";
@@ -28,8 +29,14 @@ const nodeTypes = {
   customNode,
 };
 
+const NODE_WIDTH = 50;
+const NODE_HEIGHT = 45;
+
 const NewTree: React.FC<{}> = () => {
   const reactFlowWrapper = React.useRef<any>(null);
+  const [reactFlowInstance, setReactFlowInstance] = React.useState<
+    OnLoadParams | undefined
+  >(undefined);
   const [elements, setElements] = React.useState<Elements>([]);
   const [hasUnsavedChanges, setUnsavedChanges] = React.useState<boolean>(false);
   const [editNameModal, toggleEditNameModal] = React.useState<any>(new Map());
@@ -48,6 +55,9 @@ const NewTree: React.FC<{}> = () => {
   const [nodeWeight, setNodeWeight] = React.useState<number>(0);
   const [menuSelectedNode, setMenuSelectedNode] = React.useState<string>("");
   const [showWeightForm, toggleWeightForm] = React.useState<boolean>(false);
+  const [executionErrMessages, setExecErrMsg] = React.useState<string>("");
+  const [execMsg, setExecMsg] = React.useState<string>("");
+  const { setCenter } = useZoomPanHelper();
 
   React.useEffect(() => {
     utils.getFiles(id).then((res: any) => {
@@ -99,8 +109,10 @@ const NewTree: React.FC<{}> = () => {
     event.dataTransfer.dropEffect = "move";
   };
 
-  const onLoad = (reactFlowInstance: OnLoadParams) =>
+  const onLoad = (reactFlowInstance: OnLoadParams) => {
+    setReactFlowInstance(reactFlowInstance);
     reactFlowInstance.fitView();
+  };
 
   const onDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -112,8 +124,8 @@ const NewTree: React.FC<{}> = () => {
     const newNode = createNode({
       type: nodeType,
       pos: {
-        x: event.clientX - (reactFlowBounds.left + 50 / 2),
-        y: event.clientY - (reactFlowBounds.top + 45 / 2),
+        x: event.clientX - (reactFlowBounds.left + NODE_WIDTH / 2),
+        y: event.clientY - (reactFlowBounds.top + NODE_HEIGHT / 2),
       },
     });
 
@@ -224,6 +236,60 @@ const NewTree: React.FC<{}> = () => {
   const handleSave = async () => {
     await utils.save(elements, id);
     setUnsavedChanges(false);
+  };
+
+  /**
+   * centers a matched node in canvas
+   * @param {Node} node
+   */
+  const centerHighlightedNodeInCanvas = (node: Node) => {
+    const instanceState = reactFlowInstance?.toObject();
+    const x = node.position.x + NODE_WIDTH / 2;
+    const y = node.position.y + NODE_HEIGHT / 2;
+    setCenter(x, y, instanceState?.zoom ?? 1);
+  };
+
+  const findCheapestPath = () => {
+    try {
+      const path = utils.getCheapestPath(elements);
+      if (path) {
+        const nodeIds = path.path.map((treeNode) => treeNode.data.id);
+        setElements((els) => {
+          const elements = els.map((el) => {
+            if (isNode(el) && nodeIds.includes(el.id)) {
+              el.data = {
+                ...el.data,
+                focusState: "match",
+              };
+              centerHighlightedNodeInCanvas(el);
+            }
+            return el;
+          });
+
+          return elements;
+        });
+        setExecErrMsg("");
+        setExecMsg(
+          `Cheapest path has weight ${path.weightSum}, with ${path.path.length} node(s)`
+        );
+      }
+    } catch (err: any) {
+      setExecErrMsg(err.message);
+      setExecMsg("");
+    }
+  };
+
+  const handleReset = () => {
+    setExecErrMsg("");
+    setElements((els) =>
+      els.map((el) => {
+        el.data = {
+          ...el.data,
+          focusState: undefined,
+        };
+        return el;
+      })
+    );
   };
 
   const MenuButtons: React.FC<{ close: () => void; node: CustomNodeProps }> = ({
@@ -693,14 +759,7 @@ const NewTree: React.FC<{}> = () => {
                     id="menu-button"
                     aria-expanded="true"
                     aria-haspopup="true"
-                    onClick={() => {
-                      try {
-                        const path = utils.getCheapestPath(elements);
-                        console.log("CHEAPEST_PATH", path);
-                      } catch (err: any) {
-                        console.log(err.message);
-                      }
-                    }}
+                    onClick={() => findCheapestPath()}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -724,6 +783,32 @@ const NewTree: React.FC<{}> = () => {
                     </svg>
                   </button>
                 </div>
+                <p
+                  className={`text-sm font-medium ${
+                    executionErrMessages ? "text-red-500" : "text-black"
+                  }`}
+                >
+                  {execMsg || executionErrMessages}
+                </p>
+                <button
+                  className="inline-flex justify-center  rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500"
+                  onClick={() => handleReset()}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-8 w-8"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                </button>
               </div>
             </div>
             <div

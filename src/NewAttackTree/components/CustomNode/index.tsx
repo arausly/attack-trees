@@ -13,6 +13,7 @@ export interface NodeContentProps {
   MenuButtons: React.FC<{ close: () => void; node: CustomNodeProps }>;
   fileCount?: number;
   nodeWeight?: number;
+  focusState?: "match" | "warning";
 }
 
 export interface CustomNodeProps extends NodeProps {
@@ -30,6 +31,7 @@ const CustomNode = React.memo((node: CustomNodeProps) => {
       description,
       fileCount,
       nodeWeight,
+      focusState,
     },
   } = node;
   const [showMenu, toggleMenu] = React.useState<boolean>(false);
@@ -77,12 +79,18 @@ const CustomNode = React.memo((node: CustomNodeProps) => {
   const activeNodeClass = selected ? "border-gray-500" : "";
   const defendNodeClass =
     nodeType === NodeType.DEFEND_NODE ? "border-8 border-red-600" : "";
+  const focusClass = focusState ? "border-1 border-blue-500 rounded" : "";
 
   return (
     <div
       className={`node flex w-72 bg-white flex-col ${activeNodeClass}  ${
-        highlighted ? "border-solid border-2 border-purple-500" : "border"
-      } ${defendNodeClass}`}
+        highlighted
+          ? "border-solid border-2 border-purple-500 rounded"
+          : "border"
+      } ${defendNodeClass} ${focusClass}`}
+      style={{
+        borderWidth: focusState ? "8px" : "2px",
+      }}
     >
       <div className="node__header flex-initial border">
         <div className="flex justify-between items-center p-2">
