@@ -5,7 +5,7 @@ import { NodeType } from "../../../typings";
 //style
 import "./index.css";
 
-interface NodeContentProps {
+export interface NodeContentProps {
   title: string;
   description: string;
   highlighted: boolean;

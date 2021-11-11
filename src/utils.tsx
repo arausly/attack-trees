@@ -137,12 +137,18 @@ const uploadFile = async (
  * in building tree ensure all nodes are connected, no loose nodes
  */
 const getCheapestPath = (elements: FlowElement<Node | Edge>[]) => {
-  const nodesAndEdges: { [key: string]: FlowElement<any> } = {};
+  const nodesAndEdges: { [key: string]: FlowElement<Node | Edge> } = {};
+  const copy: { [key: string]: FlowElement<Node | Edge> } = {};
   const tree = new Tree();
 
-  elements.forEach((el) => {
+  elements.forEach((el: any) => {
+    if (isNode(el) && el.data?.nodeType === NodeType.DEFEND_NODE) {
+      throw new Error("Cannot calculate cheapest path with defend nodes");
+    }
+
     if (!nodesAndEdges[el.id]) {
       nodesAndEdges[el.id] = el;
+      copy[el.id] = { ...el };
     }
   });
 
@@ -154,33 +160,29 @@ const getCheapestPath = (elements: FlowElement<Node | Edge>[]) => {
       //check if exists else create node.
       if (!tree.root) {
         //safe bet that the first edge here is from the root node
-        tree.root = new TreeNode(parentEl);
-        tree.root.children.push(new TreeNode(targetEl));
+        tree.root = new TreeNode(parentEl, [], null);
+        tree.root.children.push(new TreeNode(targetEl, [], tree.root));
+      } else {
+        //traverse tree
+        tree.traverse((node) => {
+          // console.log("NODE", node);
+          if (node.data.id === parentEl.id) {
+            // add target node to children of parent
+            node.addNewNode(targetEl);
+          }
+        });
       }
-      //traverse tree
-      tree.traverse((node) => {
-        if (node.data.id === parentEl.id) {
-          // add target node to children of parent
-          node.addNewNode(targetEl);
-        }
-      });
-
-      // delete nodesAndEdges[el.source];
-      // delete nodesAndEdges[el.target];
+      delete copy[el.source];
+      delete copy[el.target];
     }
   });
 
-  console.log({ tree });
-
-  // //tree has been built
-  // const hasUnattachedNodes = Object.values(nodesAndEdges).find((n) =>
-  //   isNode(n)
-  // );
-  // // if nodes still exist in nodes and edges i.e there loose nodes still available and hence cannot make cannot get cheapest path
-  // if (hasUnattachedNodes) {
-  //   console.error("Has loosely connected nodes, failed to build tree");
-  //   return;
-  // }
+  //tree has been built
+  const hasUnattachedNodes = Object.values(copy).find((n) => isNode(n));
+  // if nodes still exist in nodes and edges i.e there loose nodes still available and hence cannot make cannot get cheapest path
+  if (hasUnattachedNodes) {
+    throw new Error("Has loosely connected nodes, failed to build tree");
+  }
 
   return tree.getCheapestPath();
 };
