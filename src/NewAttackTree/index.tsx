@@ -270,7 +270,7 @@ const NewTree: React.FC<{}> = () => {
         });
         setExecErrMsg("");
         setExecMsg(
-          `Cheapest path has weight ${path.weightSum}, with ${path.path.length} node(s)`
+          `Cheapest path has value ${path.weightSum}, with ${path.path.length} node(s)`
         );
       }
     } catch (err: any) {
@@ -361,9 +361,7 @@ const NewTree: React.FC<{}> = () => {
           Remove
         </button>
 
-        {![NodeType.DEFEND_NODE, NodeType.LEAF_NODE].includes(
-          node.data.nodeType
-        ) ? (
+        {node.data.nodeType !== NodeType.DEFEND_NODE ? (
           <>
             <button
               type="submit"
@@ -391,9 +389,8 @@ const NewTree: React.FC<{}> = () => {
                   d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <p>Add weight</p>
+              <p>Add value</p>
             </button>
-
             <button
               type="submit"
               className="text-gray-700 flex items-center block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
@@ -421,7 +418,6 @@ const NewTree: React.FC<{}> = () => {
               </svg>
               <p>Highlight</p>
             </button>
-
             <button
               type="submit"
               className="text-gray-700 flex items-center block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
@@ -450,33 +446,35 @@ const NewTree: React.FC<{}> = () => {
               </svg>
               Add file
             </button>
-            <button
-              type="submit"
-              className="text-gray-700 flex items-center block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-              role="menuitem"
-              tabIndex={-1}
-              id="menu-item-3"
-              onClick={() => {
-                close();
-                switchNodeType(node.id);
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 mr-2"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+            {node.data.nodeType !== NodeType.LEAF_NODE ? (
+              <button
+                type="submit"
+                className="text-gray-700 flex items-center block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                role="menuitem"
+                tabIndex={-1}
+                id="menu-item-3"
+                onClick={() => {
+                  close();
+                  switchNodeType(node.id);
+                }}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                />
-              </svg>
-              Change Type
-            </button>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 mr-2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                  />
+                </svg>
+                Change Type
+              </button>
+            ) : null}
           </>
         ) : null}
       </div>
@@ -568,7 +566,7 @@ const NewTree: React.FC<{}> = () => {
               className="block text-gray-700 text-sm font-bold mb-2"
               htmlFor="weight"
             >
-              Edit node weight
+              Edit node value
             </label>
             <input
               placeholder="Enter weight"

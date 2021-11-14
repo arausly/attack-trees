@@ -16,6 +16,11 @@ const ATTACK_COLLECTION = "AttackTree";
 const FILE_COLLECTION = "NodeFiles";
 const COMMENT_COLLECTION = "Comment";
 
+//indexes
+const COMMENT_COLLECTION_INDEX = "commentByTreeId";
+//treeId
+const FILE_COLLECTION_INDEX = "fileByTreeId";
+
 let lastDigit = 0;
 const newId = (elements: Elements) => {
   elements.forEach(
@@ -26,6 +31,50 @@ const newId = (elements: Elements) => {
 
 const shortenWithEllipsis = (content: string = "", size: number = 40): string =>
   content?.length < size ? content : `${content.substring(0, size)}...`;
+
+//need backend or serverless functions
+// const deleteFilesFromCloud = async (public_ids: string[]) => {
+//   const url = `https://${process.env.REACT_APP_CLOUDINARY_API_KEY}:${process.env.REACT_APP_CLOUDINARY_API_SECRET}@api.cloudinary.com/v1_1/${process.env.REACT_APP_CLOUDINARY_CLOUD_NAME}/resources/image/upload`;
+//   await (
+//     await fetch(url, {
+//       method: "DELETE",
+//       body: JSON.stringify(public_ids),
+//     })
+//   ).json();
+// };
+
+const deleteTree = async (treeId: string) => {
+  await Promise.all([
+    //delete tree from collection
+    db.client.query(
+      db.q.Delete(db.q.Ref(db.q.Collection(ATTACK_COLLECTION), treeId))
+    ),
+    // delete files from collection
+    db.client.query(
+      db.q.Map(
+        db.q.Paginate(db.q.Match(db.q.Index(FILE_COLLECTION_INDEX), treeId)),
+        db.q.Lambda(
+          ["_", "_", "_", "_", "_", "_", "ref"],
+          db.q.Delete(db.q.Var("ref"))
+        )
+      )
+    ),
+    //delete actual files
+  ]);
+  // getFiles(treeId)
+  //   .then(async (res: any) => {
+  //     const data: any[] = res?.data;
+  //     if (data.length) {
+  //       const public_ids = data.map(
+  //         ([name, , treeId]) => `treefiles/${treeId}/${name}`
+  //       );
+  //       console.log({ public_ids });
+  //       await deleteFilesFromCloud(public_ids);
+  //     }
+
+  //   })
+  //   .catch(console.error);
+};
 
 const saveComment = async (comment: string, treeId: string) => {
   return await db.client.query(
@@ -40,7 +89,7 @@ const saveComment = async (comment: string, treeId: string) => {
 
 const getComments = async (treeId: string) => {
   return await db.client.query(
-    db.q.Paginate(db.q.Match(db.q.Index("commentByTreeId"), treeId))
+    db.q.Paginate(db.q.Match(db.q.Index(COMMENT_COLLECTION_INDEX), treeId))
   );
 };
 
@@ -96,7 +145,7 @@ const getAllTrees = async () => {
 //list files
 const getFiles = async (treeId: string) => {
   return await db.client.query(
-    db.q.Paginate(db.q.Match(db.q.Index("treeId"), treeId))
+    db.q.Paginate(db.q.Match(db.q.Index(FILE_COLLECTION_INDEX), treeId))
   );
 };
 
@@ -239,6 +288,7 @@ const utils = {
   sleep,
   saveComment,
   getComments,
+  deleteTree,
 };
 
 export default utils;
