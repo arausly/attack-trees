@@ -59,7 +59,13 @@ const deleteTree = async (treeId: string) => {
         )
       )
     ),
-    //delete actual files
+    //delete comments from collection
+    db.client.query(
+      db.q.Map(
+        db.q.Paginate(db.q.Match(db.q.Index(COMMENT_COLLECTION_INDEX), treeId)),
+        db.q.Lambda(["_", "_", "ref"], db.q.Delete(db.q.Var("ref")))
+      )
+    ),
   ]);
   // getFiles(treeId)
   //   .then(async (res: any) => {
