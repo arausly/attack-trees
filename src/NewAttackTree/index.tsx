@@ -3,7 +3,6 @@ import ReactFlow, {
   Elements,
   Background,
   BackgroundVariant,
-  MiniMap,
   Controls,
   removeElements,
   isNode,
@@ -34,6 +33,7 @@ const NODE_HEIGHT = 45;
 
 const NewTree: React.FC<{}> = () => {
   const reactFlowWrapper = React.useRef<any>(null);
+  const workflowAreaRef = React.useRef<any>(null);
   const [reactFlowInstance, setReactFlowInstance] = React.useState<
     OnLoadParams | undefined
   >(undefined);
@@ -56,6 +56,7 @@ const NewTree: React.FC<{}> = () => {
   const [menuSelectedNode, setMenuSelectedNode] = React.useState<string>("");
   const [showWeightForm, toggleWeightForm] = React.useState<boolean>(false);
   const [executionErrMessages, setExecErrMsg] = React.useState<string>("");
+  const [isMaximized, setIsMaximized] = React.useState<boolean>(false);
   const [execMsg, setExecMsg] = React.useState<string>("");
   const { setCenter } = useZoomPanHelper();
 
@@ -544,6 +545,25 @@ const NewTree: React.FC<{}> = () => {
     setUnsavedChanges(true);
   };
 
+  const handleWorkflowResize = () => {
+    const workflowNode = workflowAreaRef.current;
+    if (!isMaximized) {
+      if (workflowNode.requestFullscreen) {
+        workflowNode.requestFullscreen();
+        setIsMaximized(true);
+      } else if (workflowNode.webkitRequestFullscreen) {
+        //safari
+        workflowNode.webkitRequestFullscreen();
+      } else if (workflowNode.msRequestFullscreen) {
+        // IE11
+        workflowNode.msRequestFullscreen();
+      }
+    } else {
+      document.exitFullscreen();
+      setIsMaximized(false);
+    }
+  };
+
   return (
     <>
       <Modal
@@ -734,103 +754,143 @@ const NewTree: React.FC<{}> = () => {
         Go Back Home
       </button>
       <div className="tree flex p-8">
-        <SideBar />
-        <div className="tree__editor flex-1 border p-5">
-          <div className="flex flex-col">
-            <div className="tree__editor__toolbar flex-initial border p-2">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center">
-                  <button
-                    className={`${
-                      hasUnsavedChanges
-                        ? "bg-blue-500 hover:bg-blue-700"
-                        : "bg-blue-200"
-                    } text-white font-bold py-2 px-4 rounded m-2`}
-                    disabled={!hasUnsavedChanges}
-                    onClick={() => handleSave()}
-                  >
-                    Save
-                  </button>
-                  <button
-                    type="button"
-                    className="inline-flex justify-center  rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500"
-                    id="menu-button"
-                    aria-expanded="true"
-                    aria-haspopup="true"
-                    onClick={() => findCheapestPath()}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-8 w-8"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+        <div
+          className="tree__editor__work-area flex flex-1 bg-white"
+          ref={workflowAreaRef}
+        >
+          <SideBar />
+          <div className="tree__editor flex-1 border p-5">
+            <div className="flex flex-col">
+              <div className="tree__editor__toolbar flex-initial border p-2">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center">
+                    <button
+                      className={`${
+                        hasUnsavedChanges
+                          ? "bg-blue-500 hover:bg-blue-700"
+                          : "bg-blue-200"
+                      } text-white font-bold py-2 px-4 rounded m-2`}
+                      disabled={!hasUnsavedChanges}
+                      onClick={() => handleSave()}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </button>
-                </div>
-                <p
-                  className={`text-sm font-medium ${
-                    executionErrMessages ? "text-red-500" : "text-black"
-                  }`}
-                >
-                  {execMsg || executionErrMessages}
-                </p>
-                <button
-                  className="inline-flex justify-center  rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500"
-                  onClick={() => handleReset()}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-8 w-8"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex justify-center  rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500"
+                      id="menu-button"
+                      aria-expanded="true"
+                      aria-haspopup="true"
+                      onClick={() => findCheapestPath()}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-8 w-8"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  <p
+                    className={`text-sm font-medium ${
+                      executionErrMessages ? "text-red-500" : "text-black"
+                    }`}
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                    />
-                  </svg>
-                </button>
+                    {execMsg || executionErrMessages}
+                  </p>
+                  <div>
+                    <button
+                      className="inline-flex justify-center  rounded-md border border-gray-300 shadow-sm px-4 py-2 mr-5 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500"
+                      onClick={() => handleReset()}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-8 w-8"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      className="inline-flex justify-center  rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500"
+                      onClick={() => handleWorkflowResize()}
+                    >
+                      {isMaximized ? (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-8 w-8"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7" />
+                        </svg>
+                      ) : (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-8 w-8"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+                          />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div
-              className="tree__editor__pane border m-2"
-              style={{ height: "80vh" }}
-              ref={reactFlowWrapper}
-            >
-              <ReactFlow
-                elements={elements}
-                nodeTypes={nodeTypes}
-                onConnect={onConnect}
-                onNodeDragStop={handleNodeDragStop}
-                onDragOver={onDragOver}
-                onDrop={onDrop}
-                onLoad={onLoad}
+              <div
+                className="tree__editor__pane border m-2"
+                style={{ height: "80vh", backgroundColor: "#fff" }}
+                ref={reactFlowWrapper}
               >
-                <Background
-                  variant={BackgroundVariant.Dots}
-                  gap={12}
-                  size={0.5}
-                />
-                <MiniMap />
-                <Controls />
-              </ReactFlow>
+                <ReactFlow
+                  elements={elements}
+                  nodeTypes={nodeTypes}
+                  onConnect={onConnect}
+                  onNodeDragStop={handleNodeDragStop}
+                  onDragOver={onDragOver}
+                  onDrop={onDrop}
+                  onLoad={onLoad}
+                >
+                  <Background
+                    variant={BackgroundVariant.Dots}
+                    gap={12}
+                    size={0.5}
+                  />
+                  <Controls />
+                </ReactFlow>
+              </div>
             </div>
           </div>
         </div>
