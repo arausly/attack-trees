@@ -10,6 +10,17 @@ Deployed version (https://attack-trees.vercel.app).
 - Cloud Database (https://fauna.com/)
 - Cloudinary for file storage (https://cloudinary.com/)
 
+## Architectural diagram
+![Screenshot 2021-12-10 at 00 40 08](https://user-images.githubusercontent.com/23234383/145492717-03d4f5e2-8cfe-46e7-bb42-427629ecbc1b.png)
+
+## Main Datastructures.
+- Arrays
+- Tree
+
+## Algorithms. 
+- Breadth first traversal
+- Depth first traversal
+
 ## How to run
 
 ```
