@@ -760,7 +760,7 @@ const NewTree: React.FC<{}> = () => {
         >
           <SideBar />
           <div className="tree__editor flex-1 border p-5">
-            <div className="flex flex-col">
+            <div className="flex flex-col" style={{ height: "100vh" }}>
               <div className="tree__editor__toolbar flex-initial border p-2">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center">
@@ -871,7 +871,7 @@ const NewTree: React.FC<{}> = () => {
               </div>
               <div
                 className="tree__editor__pane border m-2"
-                style={{ height: "80vh", backgroundColor: "#fff" }}
+                style={{ height: "100vh", backgroundColor: "#fff" }}
                 ref={reactFlowWrapper}
               >
                 <ReactFlow
