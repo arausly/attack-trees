@@ -19,7 +19,71 @@ Deployed version (https://attack-trees.vercel.app).
 
 ## Algorithms. 
 - Breadth first traversal
+The initial nodes rendering in the attack-tree workflow area was represented using an Array data structure. However, to calculate the cheapest path, that had to be copied into a Tree Data structure. The Breadth first traversal algorithm was useful in this regard. see below: 
+
+```javascript 
+  //breadth first traversal
+  traverse = (cb: (node: TreeNode) => void) => {
+    if (!this.root) return;
+    const queue: TreeNode[] = [this.root];
+
+    while (queue.length) {
+      const next = queue.shift();
+      cb(next!);
+
+      queue.push(...next!.children);
+    }
+  };
+
+```
 - Depth first traversal
+In calculating the cheapest path itself, depth first algorithm was a better choice, because all nodes from the parent source node to the leaf nodes had to be traverse to get the true cheapest path. 
+
+```javascript
+
+  //depth first
+  getCheapestPath = (): FullPath[""] | undefined => {
+    if (!this.root) return;
+
+    const validPath: FullPath = {};
+    let counter = 0;
+    const stack = [this.root];
+
+    while (stack.length) {
+      const next = stack.pop();
+      if (next!.children.length) {
+        stack.push(...next!.children);
+      } else {
+        //is a leaf node
+        let weightSum = next!.data.data.nodeWeight;
+        validPath[`${counter}`] = {
+          path: [
+            ...next!.getAncestors((weight) => (weightSum += weight ?? 0)),
+            next!,
+          ],
+          weightSum,
+        };
+
+        ++counter;
+      }
+    }
+
+    return Object.entries(validPath).reduce(
+      (cheapestPath: FullPath[""], entry) => {
+        const [, { path, weightSum }] = entry;
+        if (weightSum < cheapestPath.weightSum) {
+          cheapestPath.path = path;
+          cheapestPath.weightSum = weightSum;
+        }
+        return cheapestPath;
+      },
+      {
+        path: [],
+        weightSum: Infinity,
+      }
+    );
+  };
+```
 
 ## How to run
 
